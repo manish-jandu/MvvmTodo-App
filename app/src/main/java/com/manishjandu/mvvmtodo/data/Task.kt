@@ -1,4 +1,4 @@
-package com.codinginflow.mvvmtodo.data
+package com.manishjandu.mvvmtodo.data
 
 import android.os.Parcelable
 import androidx.room.Entity
@@ -14,7 +14,7 @@ data class Task(
     val important: Boolean = false,
     val completed: Boolean = false,
     val created: Long = System.currentTimeMillis(),
-    @PrimaryKey(autoGenerate = true) val id: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int=0,
 ) : Parcelable {
     val createdDateFormaatted: String
         get() = DateFormat.getDateInstance().format(created)
