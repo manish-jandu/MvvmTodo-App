@@ -8,11 +8,15 @@ import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.manishjandu.mvvmtodo.R
 import com.manishjandu.mvvmtodo.Utils.onQueryTextChanged
+import com.manishjandu.mvvmtodo.data.SortOrder
 import com.manishjandu.mvvmtodo.databinding.FragmentTasksBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class TasksFragment : Fragment(R.layout.fragment_tasks) {
@@ -48,21 +52,26 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
         searchView.onQueryTextChanged {
             tasksViewModel.searchQuery.value = it
         }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            menu.findItem(R.id.action_hide_completed_tasks).isChecked =
+                tasksViewModel.preferencesFlow.first().hideCompleted
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_sort_by_name -> {
-                tasksViewModel.sortOrder.value = SortOrder.BY_NAME
+                tasksViewModel.onSortOrderSelected(SortOrder.BY_NAME)
                 true
             }
             R.id.action_sort_by_date_created -> {
-                tasksViewModel.sortOrder.value = SortOrder.BY_DATE
+                tasksViewModel.onSortOrderSelected(SortOrder.BY_DATE)
                 true
             }
             R.id.action_hide_completed_tasks -> {
-                item.isChecked =! item.isChecked
-                tasksViewModel.hideCompleted.value = item.isChecked
+                item.isChecked = item.isChecked
+                tasksViewModel.onHideCompletedClick(item.isChecked)
                 true
             }
             R.id.action_delete_all_completed_tasks -> {
