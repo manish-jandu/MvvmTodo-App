@@ -11,8 +11,8 @@ import javax.inject.Provider
 
 @Database(entities = [Task::class], version = 1)
 abstract class TaskDatabase : RoomDatabase() {
-    abstract fun taskDao(): TaskDao
 
+    abstract fun taskDao(): TaskDao
 
     class Callback @Inject constructor(
         private val database: Provider<TaskDatabase>,
