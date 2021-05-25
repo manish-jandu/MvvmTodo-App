@@ -9,6 +9,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,6 +19,7 @@ import com.manishjandu.mvvmtodo.utils.onQueryTextChanged
 import com.manishjandu.mvvmtodo.data.SortOrder
 import com.manishjandu.mvvmtodo.data.Task
 import com.manishjandu.mvvmtodo.databinding.FragmentTasksBinding
+import com.manishjandu.mvvmtodo.utils.exhaustive
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
@@ -57,6 +59,10 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClic
                     tasksViewModel.onTaskSwiped(task)
                 }
             }).attachToRecyclerView(recyclerViewTaks)
+
+            fabAddTask.setOnClickListener {
+                tasksViewModel.onAddNewTaskClick()
+            }
         }
 
         tasksViewModel.tasks.observe(viewLifecycleOwner) {
@@ -73,7 +79,15 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClic
                             }
                             .show()
                     }
-                }
+                    is TasksViewModel.TaskEvent.NavigateToAddTaskScreen -> {
+                        val action = TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(null,"New Task")
+                        findNavController().navigate(action)
+                    }
+                    is TasksViewModel.TaskEvent.NavigateToEditTaskScreen -> {
+                        val action = TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(event.task,"Edit Task")
+                        findNavController().navigate(action)
+                    }
+                }.exhaustive
             }
         }
 
