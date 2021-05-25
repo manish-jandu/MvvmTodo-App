@@ -1,4 +1,4 @@
-package com.manishjandu.mvvmtodo.Utils
+package com.manishjandu.mvvmtodo.utils
 
 import androidx.appcompat.widget.SearchView
 
