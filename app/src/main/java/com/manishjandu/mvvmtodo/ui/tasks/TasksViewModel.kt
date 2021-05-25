@@ -71,25 +71,31 @@ class TasksViewModel @ViewModelInject constructor(
     }
 
     fun onAddEditResult(result: Int) {
-        Log.e(TAG, "onAddEditResult: $result", )
-        when(result){
+        Log.e(TAG, "onAddEditResult: $result")
+        when (result) {
             ADD_TASK_RESULT_OK -> showTaskSavedConfirmationMessage("Task Added")
             EDIT_TASK_RESULT_OK -> showTaskSavedConfirmationMessage("Task Updated")
         }
     }
 
     private fun showTaskSavedConfirmationMessage(message: String) = viewModelScope.launch {
-        Log.e(TAG, "showTaskSavedConfirmationMessage: $message", )
+        Log.e(TAG, "showTaskSavedConfirmationMessage: $message")
         taskEventChannel.send(TaskEvent.ShowTaskSavedConfirmationMessage(msg = message))
     }
+
+    fun onDeleteAllCompletedClick() = viewModelScope.launch {
+        taskEventChannel.send(TaskEvent.NavigateToAllCompletedScreen)
+    }
+
 
     val tasks = tasksFlow.asLiveData()
 
     sealed class TaskEvent {
         object NavigateToAddTaskScreen : TaskEvent()
-        data class NavigateToEditTaskScreen(val task:Task) : TaskEvent()
+        data class NavigateToEditTaskScreen(val task: Task) : TaskEvent()
         data class ShowUndoDeleteTaskMessage(val task: Task) : TaskEvent()
-        data class ShowTaskSavedConfirmationMessage(val msg:String) : TaskEvent()
+        data class ShowTaskSavedConfirmationMessage(val msg: String) : TaskEvent()
+        object NavigateToAllCompletedScreen : TaskEvent()
     }
 
 }
