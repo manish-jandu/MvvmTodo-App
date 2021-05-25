@@ -1,12 +1,15 @@
 package com.manishjandu.mvvmtodo.ui.tasks
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -19,12 +22,16 @@ import com.manishjandu.mvvmtodo.utils.onQueryTextChanged
 import com.manishjandu.mvvmtodo.data.SortOrder
 import com.manishjandu.mvvmtodo.data.Task
 import com.manishjandu.mvvmtodo.databinding.FragmentTasksBinding
+import com.manishjandu.mvvmtodo.ui.ADD_TASK_RESULT_OK
+import com.manishjandu.mvvmtodo.ui.addedittask.AddEditTaskFragment.Companion.ADD_EDIT_RESULT
+import com.manishjandu.mvvmtodo.ui.addedittask.AddEditTaskFragment.Companion.FRAGMENT_RESULT_REQUEST_KEY
 import com.manishjandu.mvvmtodo.utils.exhaustive
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+private const val TAG = "TasksFragment"
 @AndroidEntryPoint
 class TasksFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClickListener {
     private val tasksViewModel: TasksViewModel by viewModels()
@@ -65,6 +72,12 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClic
             }
         }
 
+        setFragmentResultListener(FRAGMENT_RESULT_REQUEST_KEY){_,bundle ->
+            val result = bundle.getInt(ADD_EDIT_RESULT)
+            Log.e(TAG, "fragment listener: $result", )
+            tasksViewModel.onAddEditResult(result)
+        }
+
         tasksViewModel.tasks.observe(viewLifecycleOwner) {
             tasksAdapter.submitList(it)
         }
@@ -86,6 +99,10 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClic
                     is TasksViewModel.TaskEvent.NavigateToEditTaskScreen -> {
                         val action = TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(event.task,"Edit Task")
                         findNavController().navigate(action)
+                    }
+                    is TasksViewModel.TaskEvent.ShowTaskSavedConfirmationMessage -> {
+                        Log.e(TAG, "channel listener: ${event.msg}", )
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
                     }
                 }.exhaustive
             }
