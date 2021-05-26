@@ -30,9 +30,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 private const val TAG = "TasksFragment"
+
 @AndroidEntryPoint
 class TasksFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClickListener {
     private val tasksViewModel: TasksViewModel by viewModels()
+    private lateinit var searchView: SearchView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -70,9 +72,9 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClic
             }
         }
 
-        setFragmentResultListener(FRAGMENT_RESULT_REQUEST_KEY){_,bundle ->
+        setFragmentResultListener(FRAGMENT_RESULT_REQUEST_KEY) { _, bundle ->
             val result = bundle.getInt(ADD_EDIT_RESULT)
-            Log.e(TAG, "fragment listener: $result", )
+            Log.e(TAG, "fragment listener: $result")
             tasksViewModel.onAddEditResult(result)
         }
 
@@ -91,19 +93,28 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClic
                             .show()
                     }
                     is TasksViewModel.TaskEvent.NavigateToAddTaskScreen -> {
-                        val action = TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(null,"New Task")
+                        val action =
+                            TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(
+                                null,
+                                "New Task"
+                            )
                         findNavController().navigate(action)
                     }
                     is TasksViewModel.TaskEvent.NavigateToEditTaskScreen -> {
-                        val action = TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(event.task,"Edit Task")
+                        val action =
+                            TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(
+                                event.task,
+                                "Edit Task"
+                            )
                         findNavController().navigate(action)
                     }
                     is TasksViewModel.TaskEvent.ShowTaskSavedConfirmationMessage -> {
-                        Log.e(TAG, "channel listener: ${event.msg}", )
+                        Log.e(TAG, "channel listener: ${event.msg}")
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
                     }
                     TasksViewModel.TaskEvent.NavigateToAllCompletedScreen -> {
-                        val action = TasksFragmentDirections.actionGlobalDeleteAllCompletedFragment()
+                        val action =
+                            TasksFragmentDirections.actionGlobalDeleteAllCompletedFragment()
                         findNavController().navigate(action)
                     }
                 }.exhaustive
@@ -125,11 +136,17 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClic
         inflater.inflate(R.menu.menu_fragment_tasks, menu)
 
         val searchItem = menu.findItem(R.id.action_search)
-        val searchView = searchItem.actionView as SearchView
+        searchView = searchItem.actionView as SearchView
 
-        searchView.onQueryTextChanged {
-            tasksViewModel.searchQuery.value = it
+        val pendingQuery = tasksViewModel.searchQuery.value
+        if (pendingQuery != null && pendingQuery.isNotEmpty()){
+            searchItem.expandActionView()
+            searchView.setQuery(pendingQuery,false)
         }
+
+            searchView.onQueryTextChanged {
+                tasksViewModel.searchQuery.value = it
+            }
 
         viewLifecycleOwner.lifecycleScope.launch {
             menu.findItem(R.id.action_hide_completed_tasks).isChecked =
@@ -160,4 +177,8 @@ class TasksFragment : Fragment(R.layout.fragment_tasks), TasksAdapter.OnItemClic
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        searchView.setOnQueryTextListener(null)
+    }
 }
